@@ -59,7 +59,7 @@ button' address d action label =
   let attrs = [ onClick address action, disabled d ]
   in button attrs [ text label ]
 
-clickOption address (name, code) = li [liStyle] [ button [ btnLink, onClick address (SetCode code) ] [ text name ] ]
+clickOption address (name, code) = li [liStyle] [ button [ onClick address (SetCode code) ] [ text name ] ]
 programList address = ul [ulStyle] <| List.map (clickOption address) programs
 
 checkbox : Signal.Address Action -> Bool -> (Bool -> Action) -> String -> Html
@@ -74,14 +74,6 @@ checkbox address state tag name =
   , text name
   ]
 
-
-textareaStyle =
-  style
-    [ ("display", "block")
-    , ("width", "400px")
-    , ("height", "200px")
-    , ("resize", "none")
-    ]
 
 outputStyle =
   style
@@ -108,20 +100,6 @@ labelStyle =
   style
     [ ("display", "block")
     ]
-
-btnLink =
-  style
-    [ ("border-color", "transparent")
-    , ("background-color", "transparent")
-    , ("box-shadow", "none")
-    ]
-
-    -- ]
-    -- [ button [ onClick address Decrement ] [ text "-" ]
-    -- , div [] [ text (toString model) ]
-    -- , button [ onClick address Increment ] [ text "+" ]
-    -- ]
-
 
 type Action = Reset
             | Step

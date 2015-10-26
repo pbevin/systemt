@@ -4198,7 +4198,7 @@ Elm.Main.make = function (_elm) {
                               ,["done",true]],
               model);}
          _U.badCase($moduleName,
-         "between lines 148 and 151");
+         "between lines 126 and 129");
       }();
    });
    var SetCode = function (a) {
@@ -4246,18 +4246,9 @@ Elm.Main.make = function (_elm) {
                  model);
               }();}
          _U.badCase($moduleName,
-         "between lines 133 and 145");
+         "between lines 111 and 123");
       }();
    });
-   var btnLink = $Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
-                                                      ,_0: "border-color"
-                                                      ,_1: "transparent"}
-                                                     ,{ctor: "_Tuple2"
-                                                      ,_0: "background-color"
-                                                      ,_1: "transparent"}
-                                                     ,{ctor: "_Tuple2"
-                                                      ,_0: "box-shadow"
-                                                      ,_1: "none"}]));
    var labelStyle = $Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
                                                          ,_0: "display"
                                                          ,_1: "block"}]));
@@ -4288,18 +4279,6 @@ Elm.Main.make = function (_elm) {
                                                          ,{ctor: "_Tuple2"
                                                           ,_0: "padding"
                                                           ,_1: "10px"}]));
-   var textareaStyle = $Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
-                                                            ,_0: "display"
-                                                            ,_1: "block"}
-                                                           ,{ctor: "_Tuple2"
-                                                            ,_0: "width"
-                                                            ,_1: "400px"}
-                                                           ,{ctor: "_Tuple2"
-                                                            ,_0: "height"
-                                                            ,_1: "200px"}
-                                                           ,{ctor: "_Tuple2"
-                                                            ,_0: "resize"
-                                                            ,_1: "none"}]));
    var checkbox = F4(function (address,
    state,
    tag,
@@ -4326,13 +4305,12 @@ Elm.Main.make = function (_elm) {
             return A2($Html.li,
               _L.fromArray([liStyle]),
               _L.fromArray([A2($Html.button,
-              _L.fromArray([btnLink
-                           ,A2($Html$Events.onClick,
-                           address,
-                           SetCode(_v6._1))]),
+              _L.fromArray([A2($Html$Events.onClick,
+              address,
+              SetCode(_v6._1))]),
               _L.fromArray([$Html.text(_v6._0)]))]));}
          _U.badCase($moduleName,
-         "on line 62, column 36 to 117");
+         "on line 62, column 36 to 108");
       }();
    });
    var button$ = F4(function (address,
@@ -4502,12 +4480,10 @@ Elm.Main.make = function (_elm) {
                       ,clickOption: clickOption
                       ,programList: programList
                       ,checkbox: checkbox
-                      ,textareaStyle: textareaStyle
                       ,outputStyle: outputStyle
                       ,ulStyle: ulStyle
                       ,liStyle: liStyle
                       ,labelStyle: labelStyle
-                      ,btnLink: btnLink
                       ,Reset: Reset
                       ,Step: Step
                       ,Run: Run
