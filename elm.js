@@ -4354,8 +4354,8 @@ Elm.Main.make = function (_elm) {
    $SysT.S(A2($SysT.Ap,
    A2($SysT.Ap,
    plus,
-   $SysT.Var("u")),
-   $SysT.Var("v"))),
+   $SysT.Var("v")),
+   $SysT.Var("u"))),
    $SysT.Var("x")));
    var $double = A3($SysT.Lam,
    $SysT.Nat,

@@ -28,7 +28,7 @@ programs = [ ("double 2", Ap double <| num 2)
            , ("triangle 6", Ap triangle <| num 6)
            ]
 double = Lam Nat "x" (Rec Z "u" "v" (S (S (Var "v"))) (Var "x"))
-triangle = Lam Nat "x" (Rec Z "u" "v" (S (Ap (Ap plus (Var "u")) (Var "v"))) (Var "x"))
+triangle = Lam Nat "x" (Rec Z "u" "v" (S (Ap (Ap plus (Var "v")) (Var "u"))) (Var "x"))
 plus = Lam Nat "a" (Lam Nat "b" (Rec (Var "a") "_" "t" (S (Var "t")) (Var "b")))
 
 
