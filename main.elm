@@ -14,9 +14,11 @@ type alias Model =
   { program : SysT.E
   , trace : List SysT.E
   , numeric : Bool
+  , done : Bool
+  , stuck : Bool
   }
 
-model = Model (Ap double (S(S(Z)))) [] False
+model = Model (Ap double (S(S(Z)))) [] False False False
 
 programs = [ ("double 2", Ap double <| num 2)
            , ("double 4", Ap double <| num 4)
@@ -39,19 +41,26 @@ view address model =
         [ text "Code:"
         , code [ style [("margin-left", "1em")] ] [ text <| show model.program ]
         , pre [] [ text trace ]
+        , if model.stuck then text "Stuck!" else text ""
+        , if model.done then text "Done." else text ""
         ]
       , h1' "System Z"
+      , p [] [ text "Sample programs:" ]
       , programList address
-      , checkbox address model.numeric Numeric "Use numbers instead of S and Z"
-      , button [ onClick address Reset ] [ text "Reset" ]
-      , button [ onClick address Step ] [ text "Step" ]
-      , button [ onClick address Step ] [ text "Run" ]
+      , checkbox address model.numeric Numeric "Show numbers instead of S and Z"
+      , button' address False Reset "Reset"
+      , button' address model.done Step "Step"
+      , button' address model.done Run "Run"
       ]
 
 h1' t = h1 [] [text t]
 
-clickOption address (name, code) = li [] [ button [ btnLink, onClick address (SetCode code) ] [ text name ] ]
-programList address = ul [] <| List.map (clickOption address) programs
+button' address d action label =
+  let attrs = [ onClick address action, disabled d ]
+  in button attrs [ text label ]
+
+clickOption address (name, code) = li [liStyle] [ button [ btnLink, onClick address (SetCode code) ] [ text name ] ]
+programList address = ul [ulStyle] <| List.map (clickOption address) programs
 
 checkbox : Signal.Address Action -> Bool -> (Bool -> Action) -> String -> Html
 checkbox address state tag name =
@@ -84,6 +93,17 @@ outputStyle =
     , ("padding", "10px")
     ]
 
+ulStyle =
+  style
+    [ ("padding", "0")
+    ]
+
+liStyle =
+  style
+    [ ("list-style", "none")
+    , ("margin", "0")
+    ]
+
 labelStyle =
   style
     [ ("display", "block")
@@ -111,11 +131,21 @@ type Action = Reset
 
 update action model =
   case action of
-    Reset -> { model | trace <- [ ] }
-    Step  ->
+    Reset -> { model | trace <- [], done <- False, stuck <- False }
+    Step ->
       let current =  Maybe.withDefault model.program (List.head model.trace)
-          next    = SysT.step current
-      in { model | trace <- next :: model.trace }
-    Run   -> model
+      in addToTrace (SysT.step current) model
+
+    Run ->
+      if model.done
+         then model
+         else update Run (update Step model)
+
     Numeric n -> { model | numeric <- n }
-    SetCode e -> { model | program <- e, trace <- [] }
+    SetCode e -> update Reset { model | program <- e }
+
+addToTrace next model =
+  case next of
+    SysT.Stuck ->  { model | done <- True, stuck <- True }
+    SysT.Val e ->  { model | trace <- e :: model.trace, done <- True }
+    SysT.Step e -> { model | trace <- e :: model.trace }

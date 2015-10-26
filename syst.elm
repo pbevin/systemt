@@ -1,4 +1,4 @@
-module SysT (E(..), T(..), step, showE, num) where
+module SysT (E(..), T(..), Step(..), step, showE, num) where
 
 import Dict
 
@@ -25,26 +25,37 @@ num n =
     0 -> Z
     _ -> S (num <| n-1)
 
-step : E -> E
+type Step = Step E
+          | Val E
+          | Stuck
+
+step : E -> Step
 step e =
+  let e' = step' e
+  in if | e == e'   -> Stuck
+        | val e'    -> Val e'
+        | otherwise -> Step e'
+
+step' : E -> E
+step' e =
   case e of
     -- Var x     -> error ("Unbound variable " ++ x)
     Z         -> Z
-    S e       -> S (step e)           -- 9.3a
+    S e       -> S (step' e)           -- 9.3a
     Ap (Lam t x e) e2 -> subst e2 x e -- 9.3d
     Ap e1 e2  ->
       if val e1
-        then Ap e1 (step e2)          -- 9.3c
-        else Ap (step e1) e2          -- 9.3b
+        then Ap e1 (step' e2)          -- 9.3c
+        else Ap (step' e1) e2          -- 9.3b
     Rec e0 x y e1 e ->
       case e of
         Z -> e0  -- 9.3f
         S e' ->
           if val e
              then subst e' x (subst (Rec e0 x y e1 e') y e1) -- 9.3g
-             else Rec e0 x y e1 (step e) -- 9.3e
+             else Rec e0 x y e1 (step' e) -- 9.3e
         _ ->
-          Rec e0 x y e1 (step e) -- 9.3e
+          Rec e0 x y e1 (step' e) -- 9.3e
 
 subst : E -> ID -> E -> E
 subst r z exp =

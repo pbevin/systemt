@@ -4176,38 +4176,29 @@ Elm.Main.make = function (_elm) {
    $StartApp$Simple = Elm.StartApp.Simple.make(_elm),
    $String = Elm.String.make(_elm),
    $SysT = Elm.SysT.make(_elm);
-   var update = F2(function (action,
+   var addToTrace = F2(function (next,
    model) {
       return function () {
-         switch (action.ctor)
-         {case "Numeric":
-            return _U.replace([["numeric"
-                               ,action._0]],
-              model);
-            case "Reset":
+         switch (next.ctor)
+         {case "Step":
             return _U.replace([["trace"
-                               ,_L.fromArray([])]],
+                               ,A2($List._op["::"],
+                               next._0,
+                               model.trace)]],
               model);
-            case "Run": return model;
-            case "SetCode":
-            return _U.replace([["program"
-                               ,action._0]
-                              ,["trace",_L.fromArray([])]],
+            case "Stuck":
+            return _U.replace([["done",true]
+                              ,["stuck",true]],
               model);
-            case "Step":
-            return function () {
-                 var current = A2($Maybe.withDefault,
-                 model.program,
-                 $List.head(model.trace));
-                 var next = $SysT.step(current);
-                 return _U.replace([["trace"
-                                    ,A2($List._op["::"],
-                                    next,
-                                    model.trace)]],
-                 model);
-              }();}
+            case "Val":
+            return _U.replace([["trace"
+                               ,A2($List._op["::"],
+                               next._0,
+                               model.trace)]
+                              ,["done",true]],
+              model);}
          _U.badCase($moduleName,
-         "between lines 113 and 121");
+         "between lines 148 and 151");
       }();
    });
    var SetCode = function (a) {
@@ -4221,6 +4212,43 @@ Elm.Main.make = function (_elm) {
    var Run = {ctor: "Run"};
    var Step = {ctor: "Step"};
    var Reset = {ctor: "Reset"};
+   var update = F2(function (action,
+   model) {
+      return function () {
+         switch (action.ctor)
+         {case "Numeric":
+            return _U.replace([["numeric"
+                               ,action._0]],
+              model);
+            case "Reset":
+            return _U.replace([["trace"
+                               ,_L.fromArray([])]
+                              ,["done",false]
+                              ,["stuck",false]],
+              model);
+            case "Run":
+            return model.done ? model : A2(update,
+              Run,
+              A2(update,Step,model));
+            case "SetCode":
+            return A2(update,
+              Reset,
+              _U.replace([["program"
+                          ,action._0]],
+              model));
+            case "Step":
+            return function () {
+                 var current = A2($Maybe.withDefault,
+                 model.program,
+                 $List.head(model.trace));
+                 return A2(addToTrace,
+                 $SysT.step(current),
+                 model);
+              }();}
+         _U.badCase($moduleName,
+         "between lines 133 and 145");
+      }();
+   });
    var btnLink = $Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
                                                       ,_0: "border-color"
                                                       ,_1: "transparent"}
@@ -4233,6 +4261,15 @@ Elm.Main.make = function (_elm) {
    var labelStyle = $Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
                                                          ,_0: "display"
                                                          ,_1: "block"}]));
+   var liStyle = $Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                      ,_0: "list-style"
+                                                      ,_1: "none"}
+                                                     ,{ctor: "_Tuple2"
+                                                      ,_0: "margin"
+                                                      ,_1: "0"}]));
+   var ulStyle = $Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                      ,_0: "padding"
+                                                      ,_1: "0"}]));
    var outputStyle = $Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
                                                           ,_0: "float"
                                                           ,_1: "right"}
@@ -4282,20 +4319,34 @@ Elm.Main.make = function (_elm) {
                    ,$Html.text(name)]));
    });
    var clickOption = F2(function (address,
-   _v3) {
+   _v6) {
       return function () {
-         switch (_v3.ctor)
+         switch (_v6.ctor)
          {case "_Tuple2":
             return A2($Html.li,
-              _L.fromArray([]),
+              _L.fromArray([liStyle]),
               _L.fromArray([A2($Html.button,
               _L.fromArray([btnLink
                            ,A2($Html$Events.onClick,
                            address,
-                           SetCode(_v3._1))]),
-              _L.fromArray([$Html.text(_v3._0)]))]));}
+                           SetCode(_v6._1))]),
+              _L.fromArray([$Html.text(_v6._0)]))]));}
          _U.badCase($moduleName,
-         "on line 53, column 36 to 110");
+         "on line 62, column 36 to 117");
+      }();
+   });
+   var button$ = F4(function (address,
+   d,
+   action,
+   label) {
+      return function () {
+         var attrs = _L.fromArray([A2($Html$Events.onClick,
+                                  address,
+                                  action)
+                                  ,$Html$Attributes.disabled(d)]);
+         return A2($Html.button,
+         attrs,
+         _L.fromArray([$Html.text(label)]));
       }();
    });
    var h1$ = function (t) {
@@ -4360,7 +4411,7 @@ Elm.Main.make = function (_elm) {
                                 ,_0: "triangle 6"
                                 ,_1: $SysT.Ap(triangle)($SysT.num(6))}]);
    var programList = function (address) {
-      return $Html.ul(_L.fromArray([]))(A2($List.map,
+      return $Html.ul(_L.fromArray([ulStyle]))(A2($List.map,
       clickOption(address),
       programs));
    };
@@ -4383,44 +4434,55 @@ Elm.Main.make = function (_elm) {
                                    _L.fromArray([$Html.text(show(model.program))]))
                                    ,A2($Html.pre,
                                    _L.fromArray([]),
-                                   _L.fromArray([$Html.text(trace)]))]))
+                                   _L.fromArray([$Html.text(trace)]))
+                                   ,model.stuck ? $Html.text("Stuck!") : $Html.text("")
+                                   ,model.done ? $Html.text("Done.") : $Html.text("")]))
                       ,h1$("System Z")
+                      ,A2($Html.p,
+                      _L.fromArray([]),
+                      _L.fromArray([$Html.text("Sample programs:")]))
                       ,programList(address)
                       ,A4(checkbox,
                       address,
                       model.numeric,
                       Numeric,
-                      "Use numbers instead of S and Z")
-                      ,A2($Html.button,
-                      _L.fromArray([A2($Html$Events.onClick,
+                      "Show numbers instead of S and Z")
+                      ,A4(button$,
                       address,
-                      Reset)]),
-                      _L.fromArray([$Html.text("Reset")]))
-                      ,A2($Html.button,
-                      _L.fromArray([A2($Html$Events.onClick,
+                      false,
+                      Reset,
+                      "Reset")
+                      ,A4(button$,
                       address,
-                      Step)]),
-                      _L.fromArray([$Html.text("Step")]))
-                      ,A2($Html.button,
-                      _L.fromArray([A2($Html$Events.onClick,
+                      model.done,
+                      Step,
+                      "Step")
+                      ,A4(button$,
                       address,
-                      Step)]),
-                      _L.fromArray([$Html.text("Run")]))]));
+                      model.done,
+                      Run,
+                      "Run")]));
       }();
    });
-   var Model = F3(function (a,
+   var Model = F5(function (a,
    b,
-   c) {
+   c,
+   d,
+   e) {
       return {_: {}
+             ,done: d
              ,numeric: c
              ,program: a
+             ,stuck: e
              ,trace: b};
    });
-   var model = A3(Model,
+   var model = A5(Model,
    A2($SysT.Ap,
    $double,
    $SysT.S($SysT.S($SysT.Z))),
    _L.fromArray([]),
+   false,
+   false,
    false);
    var main = $StartApp$Simple.start({_: {}
                                      ,model: model
@@ -4436,11 +4498,14 @@ Elm.Main.make = function (_elm) {
                       ,plus: plus
                       ,view: view
                       ,h1$: h1$
+                      ,button$: button$
                       ,clickOption: clickOption
                       ,programList: programList
                       ,checkbox: checkbox
                       ,textareaStyle: textareaStyle
                       ,outputStyle: outputStyle
+                      ,ulStyle: ulStyle
+                      ,liStyle: liStyle
                       ,labelStyle: labelStyle
                       ,btnLink: btnLink
                       ,Reset: Reset
@@ -4448,7 +4513,8 @@ Elm.Main.make = function (_elm) {
                       ,Run: Run
                       ,Numeric: Numeric
                       ,SetCode: SetCode
-                      ,update: update};
+                      ,update: update
+                      ,addToTrace: addToTrace};
    return _elm.Main.values;
 };
 Elm.Maybe = Elm.Maybe || {};
@@ -12847,7 +12913,7 @@ Elm.SysT.make = function (_elm) {
             case "Z":
             return numeric ? "0" : "Z";}
          _U.badCase($moduleName,
-         "between lines 73 and 81");
+         "between lines 84 and 92");
       }();
    });
    var showNum = F2(function (n,
@@ -12866,6 +12932,13 @@ Elm.SysT.make = function (_elm) {
          A2(showE,true,e)));
       }();
    });
+   var Stuck = {ctor: "Stuck"};
+   var Val = function (a) {
+      return {ctor: "Val",_0: a};
+   };
+   var Step = function (a) {
+      return {ctor: "Step",_0: a};
+   };
    var val = function (e) {
       return function () {
          switch (e.ctor)
@@ -12950,10 +13023,10 @@ Elm.SysT.make = function (_elm) {
               z) ? r : Var(exp._0);
             case "Z": return Z;}
          _U.badCase($moduleName,
-         "between lines 51 and 69");
+         "between lines 62 and 80");
       }();
    });
-   var step = function (e) {
+   var step$ = function (e) {
       return function () {
          switch (e.ctor)
          {case "Ap": switch (e._0.ctor)
@@ -12963,8 +13036,8 @@ Elm.SysT.make = function (_elm) {
                    e._0._2);}
               return val(e._0) ? A2(Ap,
               e._0,
-              step(e._1)) : A2(Ap,
-              step(e._0),
+              step$(e._1)) : A2(Ap,
+              step$(e._0),
               e._1);
             case "Rec": return function () {
                  switch (e._4.ctor)
@@ -12985,19 +13058,26 @@ Elm.SysT.make = function (_elm) {
                       e._1,
                       e._2,
                       e._3,
-                      step(e._4));
+                      step$(e._4));
                     case "Z": return e._0;}
                  return A5(Rec,
                  e._0,
                  e._1,
                  e._2,
                  e._3,
-                 step(e._4));
+                 step$(e._4));
               }();
-            case "S": return S(step(e._0));
+            case "S": return S(step$(e._0));
             case "Z": return Z;}
          _U.badCase($moduleName,
-         "between lines 30 and 47");
+         "between lines 41 and 58");
+      }();
+   };
+   var step = function (e) {
+      return function () {
+         var e$ = step$(e);
+         return _U.eq(e,
+         e$) ? Stuck : val(e$) ? Val(e$) : Step(e$);
       }();
    };
    var Arrow = F2(function (a,b) {
@@ -13017,7 +13097,10 @@ Elm.SysT.make = function (_elm) {
                       ,Lam: Lam
                       ,Ap: Ap
                       ,Nat: Nat
-                      ,Arrow: Arrow};
+                      ,Arrow: Arrow
+                      ,Step: Step
+                      ,Val: Val
+                      ,Stuck: Stuck};
    return _elm.SysT.values;
 };
 Elm.Task = Elm.Task || {};
